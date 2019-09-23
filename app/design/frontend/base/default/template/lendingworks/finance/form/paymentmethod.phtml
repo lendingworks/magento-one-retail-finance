@@ -1,0 +1,37 @@
+<?php
+$_form = $this;
+$_code = $_form->getMethodCode();
+$_method = $_form->getMethod();
+?>
+<ul
+        class="form-list"
+        data-storeurl="<?php echo  Mage::getBaseUrl(); ?>"
+        id="payment_form_<?php echo $this->getMethodCode() ?>"
+>
+    <li>
+        <a href="https://www.lendingworks.co.uk">
+            <img
+                    src="<?php echo Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) ?>lendingworks/lw-logo.svg"
+                    alt="Visit Lending Works website"
+                    style="float: right;width: 50%;"
+            >
+        </a>
+    </li>
+</ul>
+<script type="text/javascript">
+  //<![CDATA[
+  function respondToClick(event){
+    lendingWorksForm.createOrder(event);
+  }
+
+  if($('p_method_<?php echo $this->getMethodCode() ?>')){
+    Event.observe($('p_method_<?php echo $this->getMethodCode() ?>'), 'click', respondToClick);
+  }
+
+  lendingWorksForm = new LendingWorksForm(
+      'p_method_<?php echo $this->getMethodCode() ?>',
+      '<?php echo $this->getMethodCode() ?>'
+  );
+  //]]>
+</script>
+

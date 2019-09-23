@@ -1,0 +1,1 @@
+app/code/community/Lendingworks/Finance/docs/UserGuide.md

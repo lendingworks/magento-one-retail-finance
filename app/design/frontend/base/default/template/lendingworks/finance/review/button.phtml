@@ -1,0 +1,23 @@
+<div id="checkout-review-submit">
+    <div class="buttons-set" id="review-buttons-container-lendingworks">
+        <div style="color:red" id="ErrorMessages"></div>
+        <button id="lw-place-order" type="submit"
+                title="<?php echo Mage::helper('core')->quoteEscape($this->__('Place Order')) ?>"
+                class="button btn-checkout">
+            <span><span><?php echo $this->__('Place Order') ?></span></span></button>
+    </div>
+</div>
+<script type="text/javascript">
+  //<![CDATA[
+  function respondToPlaceOrder (event) {
+    lendingWorksForm.placeOrder(event)
+  }
+
+  if ($('review-buttons-container')) {
+    Event.observe($('lw-place-order'), 'click', respondToPlaceOrder)
+  }
+
+  lendingWorksForm = new LendingWorksForm('lw-place-order')
+  lendingWorksForm.overwritePlaceOrderButton()
+  //]]>
+</script>

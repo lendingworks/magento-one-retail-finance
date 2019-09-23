@@ -1,0 +1,16 @@
+<layout version="0.1.0">
+    <adminhtml_sales_order_view>
+        <reference name="head">
+            <action method="addJs">
+                <script>lendingworks/lwfinanceadmin.js</script>
+            </action>
+        </reference>
+        <reference name="order_items">
+            <action method="setTemplate">
+                <template>lendingworks/sales/order/view/items.phtml</template>
+            </action>
+            <block type="lendingworks_finance/sales_order_view_lworder" name="lendingworks_sales_order_view_lworder"
+                   template="lendingworks/sales/order/view/lworder.phtml"/>
+        </reference>
+    </adminhtml_sales_order_view>
+</layout>

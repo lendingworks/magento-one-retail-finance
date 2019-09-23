@@ -1,0 +1,64 @@
+<?php
+
+$order = $this->getOrder();
+
+$lwOrderId = $this->getLWOrderID();
+$lwStatus = $this->getLWStatus();
+$lwFulfilmentStatus = $this->getLWFulfilmentStatus();
+$canFulfill = $this->canFulfill();
+$isFinancedByLw = $this->isFinancedByLw();
+/** @var $_helper Lendingworks_Finance_Helper_Data  */
+$_helper = $this->helper('lendingworks_finance');
+?>
+<div id="lw-fulfillment-container"  data-storeurl="<?php echo  Mage::getBaseUrl(); ?>">
+    <div class="entry-edit box-left">
+        <div class="entry-edit-head">
+            <h4 class="icon-head"><?php echo $this->__('Lending Works Order Data') ?></h4>
+        </div>
+        <fieldset>
+            <div id="mymodule_custom_block">
+                <table cellspacing="0" class="form-list">
+                    <tbody>
+                    <tr>
+                        <td class="label"><label>Lending Works Order ID</label></td>
+                        <td class="value"><strong><?php echo $lwOrderId; ?></strong></td>
+                    </tr>
+                    <tr>
+                        <td class="label"><label>Lending Works Order Status</label></td>
+                        <td class="value"><strong><?php echo ucfirst($lwStatus); ?></strong></td>
+                    </tr>
+                    <tr>
+                        <td class="label"><label>Order Fulfilment Status</label></td>
+                        <td class="value"><strong><?php echo ucfirst($lwFulfilmentStatus); ?></strong></td>
+                        <td>
+                          <?php if ($canFulfill): ?>
+                              <button title="Fulfilment" id="lw-fulfilment-order" type="submit">
+                                  <span><span><span>Fulfilment</span></span></span>
+                              </button>
+                          <?php endif; ?>
+
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </fieldset>
+    </div>
+    <div class="clear"></div>
+</div>
+
+
+<script type="text/javascript">
+  //<![CDATA[
+  function respondToFulfilmentOrder (event) {
+      var id = "<?php echo $lwOrderId; ?>" ;
+    LendingWorksBackend.fulfilmentButton(id)
+  }
+
+  if ($('lw-fulfilment-container')) {
+    Event.observe($('lw-fulfilment-order'), 'click', respondToFulfilmentOrder)
+  }
+
+  LendingWorksBackend = new LendingWorksBackend('lw-fulfilment-order')
+  //]]>
+</script>

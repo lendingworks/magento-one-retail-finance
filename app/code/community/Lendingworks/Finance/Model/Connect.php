@@ -42,16 +42,28 @@ class Lendingworks_Finance_Model_Connect
   public function buildProductsData($quote)
   {
     $products = array();
-    $discount = 0.0000;
+    $totalDiscount = 0.0000;
+    $totalTax = 0.0000;
 
+
+    /** @var Mage_Sales_Model_Quote_Item $item */
     foreach ($quote->getAllItems() as $item) {
+      $quantity = $item->getQty();
+      $basePrice = $item->getPrice();
+      $taxPercent = $item->getTaxPercent();
+
       $products[] = array(
-        'cost' => $item->getPrice(),
-        'quantity' => $item->getQty(),
+        'cost' => $basePrice,
+        'quantity' => $quantity,
         'description' => $item->getDescription() ?: $item->getName(),
       );
+
       if ($item->getDiscountAmount() > 0) {
-        $discount -= $item->getDiscountAmount();
+        $totalDiscount -= $item->getDiscountAmount();
+      }
+
+      if ($taxPercent && $taxPercent > 0) {
+        $totalTax += $basePrice * ($taxPercent / 100) * $quantity;
       }
     }
 
@@ -59,15 +71,24 @@ class Lendingworks_Finance_Model_Connect
     $products[] = array(
       'cost' => $quote->getShippingAddress()->getShippingAmount(),
       'quantity' => 1.0,
-      'description' => 'Shipping: ' . $quote->getShippingAddress()->getShippingDescription()
+      'description' => 'Shipping: ' . $quote->getShippingAddress()->getShippingDescription(),
     );
 
     // Add any discount
-    if ($discount < 0) {
+    if ($totalDiscount < 0) {
       $products[] = array(
-        'cost' => number_format($discount, 4, '.', ''),
+        'cost' => number_format($totalDiscount, 4, '.', ''),
         'quantity' => 1.0,
-        'description' => 'Discount'
+        'description' => 'Discount',
+      );
+    }
+
+    // Add any tax
+    if ($totalTax > 0) {
+      $products[] = array(
+        'cost' => number_format($totalTax, 4, '.', ''),
+        'quantity' => 1.0,
+        'description' => 'Total tax applied',
       );
     }
 
@@ -85,7 +106,6 @@ class Lendingworks_Finance_Model_Connect
    * @return array
    * @throws Mage_Core_Exception
    */
-
   public function createOrder($postData)
   {
     $helper = Mage::helper('lendingworks_finance');
@@ -93,10 +113,10 @@ class Lendingworks_Finance_Model_Connect
     $apiURL = $helper->getConnectEnvironment() . self::API_CREATE_ORDER_ENDPOINT;
 
     $apiKey = Mage::getModel('core/encryption')->decrypt(
-        Mage::getStoreConfig(
-            'payment/' . $helper::PAYMENT_CODE . '/api_key',
-            Mage::app()->getStore()
-        )
+      Mage::getStoreConfig(
+        'payment/' . $helper::PAYMENT_CODE . '/api_key',
+        Mage::app()->getStore()
+      )
     );
 
     $return = array();
@@ -118,9 +138,9 @@ class Lendingworks_Finance_Model_Connect
 
     if ($code !== 200) {
       $message = sprintf(
-          'Could not create order, non-200 HTTP code returned: %d - %s',
-          $code,
-          $body
+        'Could not create order, non-200 HTTP code returned: %d - %s',
+        $code,
+        $body
       );
       $return['body'] = $message;
       return $return;
@@ -133,7 +153,7 @@ class Lendingworks_Finance_Model_Connect
     }
 
     $return['token'] = $result['token'];
-    $return['body'] = 'order successful.. token returned';
+    $return['body'] = 'Order successful';
 
     return $return;
   }
@@ -147,10 +167,10 @@ class Lendingworks_Finance_Model_Connect
     $apiURL = $helper->getConnectEnvironment() . self::API_FULFILL_ORDER_ENDPOINT;
 
     $apiKey = Mage::getModel('core/encryption')->decrypt(
-        Mage::getStoreConfig(
-            'payment/' . $helper::PAYMENT_CODE . '/api_key',
-            Mage::app()->getStore()
-        )
+      Mage::getStoreConfig(
+        'payment/' . $helper::PAYMENT_CODE . '/api_key',
+        Mage::app()->getStore()
+      )
     );
 
     $return = array();
@@ -180,9 +200,9 @@ class Lendingworks_Finance_Model_Connect
 
     if ($code !== 200) {
       $message = sprintf(
-          'Could not fulfill order, non-200 HTTP code returned: %d - %s',
-          $code,
-          $body
+        'Could not fulfill order, non-200 HTTP code returned: %d - %s',
+        $code,
+        $body
       );
       $return['body'] = $message;
 
@@ -212,11 +232,11 @@ class Lendingworks_Finance_Model_Connect
       $http = new Varien_Http_Adapter_Curl();
 
       $http->write(
-          $methodName,
-          $apiURL,
-          '1.1',
-          $headers,
-          $requestBody
+        $methodName,
+        $apiURL,
+        '1.1',
+        $headers,
+        $requestBody
       );
       $response = $http->read();
     } catch (Exception $e) {
@@ -226,9 +246,9 @@ class Lendingworks_Finance_Model_Connect
     // handle transport error
     if ($http->getErrno()) {
       Mage::logException(
-          new Exception(
-              sprintf('Lendingworks api CURL connection error #%s: %s', $http->getErrno(), $http->getError())
-          )
+        new Exception(
+          sprintf('Lendingworks api CURL connection error #%s: %s', $http->getErrno(), $http->getError())
+        )
       );
       $http->close();
 
@@ -267,9 +287,9 @@ class Lendingworks_Finance_Model_Connect
     }
 
     $error['message'] = sprintf(
-        'Non-200 HTTP code returned: %d - %s',
-        $code,
-        $body
+      'Non-200 HTTP code returned: %d - %s',
+      $code,
+      $body
     );
 
     $exception = new Mage_Core_Exception($error['message'], $code);
